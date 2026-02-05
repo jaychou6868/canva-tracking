@@ -30,11 +30,14 @@ export function createTrackingRouter() {
       }
 
       // 記錄點擊（含去重邏輯）
+      const userAgent = req.headers['user-agent'];
+      const referer = req.headers['referer'] || req.headers['referrer'];
+
       await trackingService.recordClick({
         shortUrlId: shortUrl.id,
         ipAddress: req.ip || req.socket.remoteAddress || '',
-        userAgent: req.headers['user-agent'] || '',
-        referer: req.headers['referer'] || req.headers['referrer'] || ''
+        userAgent: Array.isArray(userAgent) ? userAgent[0] : (userAgent || ''),
+        referer: Array.isArray(referer) ? referer[0] : (referer || '')
       });
 
       // 重定向到目標網址
