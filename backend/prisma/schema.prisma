@@ -1,0 +1,57 @@
+// Prisma schema for Canva tracking system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 行銷活動
+model Campaign {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  shortUrls ShortUrl[]
+}
+
+// 短網址
+model ShortUrl {
+  id          String   @id @default(uuid())
+  shortCode   String   @unique
+  originalUrl String
+  linkType    LinkType
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  clicks      Click[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([shortCode])
+  @@index([campaignId])
+}
+
+// 連結類型
+enum LinkType {
+  PURCHASE_CLICK  // 購買按鈕點擊
+  QRCODE_SCAN     // 二維碼掃描
+}
+
+// 點擊記錄
+model Click {
+  id          String   @id @default(uuid())
+  shortUrlId  String
+  shortUrl    ShortUrl @relation(fields: [shortUrlId], references: [id], onDelete: Cascade)
+  fingerprint String   // IP+UA hash (去重用)
+  ipHash      String   // IP hash (隱私保護)
+  userAgent   String?
+  referer     String?
+  deviceType  String?  // "mobile" | "desktop"
+  clickedAt   DateTime @default(now())
+
+  @@index([shortUrlId, clickedAt])
+  @@index([fingerprint, clickedAt])
+}
