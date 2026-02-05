@@ -12,7 +12,20 @@ const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://canva-tracking-4ktx36evg-karens-projects-1e2ad0d5.vercel.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+
+    // 允許沒有 origin 的請求（如 Postman）或在允許列表中的來源
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
